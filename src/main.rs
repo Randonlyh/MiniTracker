@@ -1,0 +1,167 @@
+mod db;
+mod sessions;
+use db::*;
+use sessions::*;
+
+use std::process::{Command, Stdio};
+use std::env;
+use std::io;
+
+#[cfg(debug_assertions)]
+use std::fs::File;
+#[cfg(debug_assertions)]
+use std::io::Write;
+
+use rusqlite::{Connection, Error};
+use rusqlite::params;
+
+fn main() -> io::Result<()> {
+	let mut process;
+	let mut recording_mode = true; 
+
+	let connection = init_connection();
+	db_setup(&connection).unwrap();
+	
+	let mut args = env::args();
+	
+	if args.len() < 2 {
+		eprintln!("MiniTracker Error: No application supplied!");
+		return Ok(());
+	}
+
+	// Removes the application from the arguments of the spawned app
+	args.next();
+
+	// Any environment variables are passed into the next program
+	let mut envs: Vec<(String, String)> = env::vars().collect();
+
+	let mut app_id = 0;
+	let mut launch_id = 0;
+
+	let mut current_var = args.next();
+	while let Some(ref var) = current_var {
+	    match var.contains("--trackid=") {
+			true => {
+			    recording_mode = false;
+							
+				let parsed = var.trim_start_matches("--trackid=");
+				let split: Vec<&str> = parsed.split('.').collect();
+				
+				app_id = match split[0].parse::<i64>() {
+				    Ok(num) => num,
+					Err(_) => panic!("MiniTracker Error: Could not parse manual App/Launch IDs! Aborting..."),	
+				};
+
+				if split.len() > 1 {
+    				launch_id = match split[1].parse::<i64>() {
+    				    Ok(num) => num,
+    					Err(_) => panic!("MiniTracker Error: Could not parse manual App/Launch IDs! Aborting..."),	
+    				};
+				}
+				
+				current_var = args.next();
+				continue;
+			}
+			false => (),
+		};
+		
+		match var.split_once('=') {
+			Some((key, value)) => {
+				// Any environment variables passed after this program still go into the next program
+				envs.push((key.to_string(), value.to_string()));
+			},
+			None => {
+				break;
+			},
+		}
+		
+		current_var = args.next();
+	}
+
+	let current_args: Vec<String> = args.collect();
+	
+	// Ripping all environment/arguments to a text file in Debug mode
+	#[cfg(debug_assertions)]
+	print_application_args_to_file(current_args.clone(), envs.clone());
+
+	let app = current_var.unwrap();
+	
+	process = Command::new(&app)
+		.envs(envs.into_iter())
+		.args(current_args.into_iter())
+		.stdin(Stdio::inherit())
+		.stdout(Stdio::inherit())
+		.spawn()
+		.expect("MiniTracker Error: Application should be a valid process.");
+
+	if recording_mode {
+    	// Parsing the path of the app
+    	let app_split: Vec<&str> = app.split('/').collect();
+ 
+	    app_id = automatic_app(&app_split, &connection);
+	} else {
+	    manual_mode(app_id, launch_id, &connection).unwrap();
+	}
+
+	let session_id = create_play_session(&connection, app_id, launch_id);
+	let start_time: i64 = connection.query_one("SELECT unixepoch()", [], |row| row.get::<_, i64>(0)).unwrap();
+	
+	process.wait().unwrap();
+
+	update_playtime(&connection, app_id, session_id, start_time);
+
+	Ok(())
+}
+
+#[cfg(debug_assertions)]
+fn print_application_args_to_file(args: Vec<String>, envs: Vec<(String, String)>) {
+	let mut file = File::create("./arguments.txt").expect("File should be created.");
+	
+	for i in envs.into_iter() {
+		writeln!(&mut file, "{}={} ", i.0, i.1).unwrap();
+	}
+	
+	writeln!(&mut file, "").unwrap();
+	
+	for i in args.into_iter() {
+		writeln!(&mut file, "{}", i).unwrap();
+	}
+}
+
+fn manual_mode(app_id: i64, launch_id: i64, connection: &Connection) -> Result<(), Error> {
+   	// Check if IDs exists and create them if not
+    connection.execute("INSERT OR IGNORE INTO Apps(AppID) VALUES(?1)", [app_id])?;
+	connection.execute("INSERT OR IGNORE INTO UserData(UserID, AppID, Playtime) VALUES(1, ?1, 0)", [app_id])?;
+	connection.execute("INSERT OR IGNORE INTO LaunchOptions(LaunchID, AppID) VALUES(?1, ?2)", [launch_id, app_id])?;
+	Ok(())
+}
+
+fn automatic_app(app_split: &Vec<&str>, connection: &Connection) -> i64 {	
+    let app_name = app_split.last().unwrap();
+    
+	let app_id: i64 = match connection.query_row("SELECT AppID FROM Apps WHERE Name == ?1",
+	[app_name], |row| row.get::<_, i64>(0)) {
+	    Ok(id) => id,
+	    Err(_) => {
+			match connection.query_row("INSERT INTO Apps(Name, PlatformID) VALUES(?1, 2) RETURNING AppID",
+			[app_name], |row| row.get::<_, i64>(0)) {
+                Ok(id) => id,
+                Err(err) => panic!("MiniTracker SQL Command Error: {}", err),
+			}
+		},
+	};
+	
+   	// Create UserData entry for app if it does not exist
+	match connection.query_row("SELECT * FROM UserData WHERE AppID == ?1 AND UserID == 1",
+	[app_id], |row| row.get::<_, i64>(0)) {
+       	Ok(_) => (),
+       	Err(_) => {
+       	    connection.execute("INSERT INTO UserData(UserID, AppID, Playtime) VALUES(1, ?1, 0)", [app_id]).unwrap();
+       	},
+	};
+
+    connection.execute("INSERT OR IGNORE INTO LaunchOptions(LaunchID, AppID, Name)
+        VALUES(0, ?1, ?2)", params![app_id, app_name]).unwrap();
+
+	app_id
+}
