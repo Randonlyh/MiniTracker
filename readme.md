@@ -11,7 +11,7 @@ The app is tiny, depending on only the Rust Standard Library, and while running 
 
 ### Advanced Usage
 
-MiniTracker has 2 modes. By defualt it uses Automatic detection, which uses the environment variables, application, and arguments to try to figure out the name and other details of the app/game you're using. This allows it to update the database under the correct name or create a new entry. That being said it should be more than good enough for telling apps apart from each other. Currently MiniTracker detects every app as a Linux application, but support for the following platforms are planned:
+MiniTracker has 2 modes. By default it uses Automatic detection, which uses the environment variables, application, and arguments to try to figure out the name and other details of the app/game you're using. This allows it to update the database under the correct name or create a new entry. Currently MiniTracker detects every app as a Linux application, but specific support for the following platforms are planned:
 * Steam
 * Dolphin (Gamecube/Wii)
 * Cemu (Wii U)
@@ -22,7 +22,7 @@ MiniTracker has 2 modes. By defualt it uses Automatic detection, which uses the 
 
 With more to come as I need them or per request.
 
-Do note that detection can't figure out too much information. There is only so much you can surmise from these values, and trying to check a database of some kind would bloat the app. To solve this there is a secondary mode:
+Do note that auto detection can't figure out too much information. There is only so much you can surmise from these values, and trying to check a database of some kind would bloat the app. To solve this there is a secondary mode:
 
 #### Manual Mode
 
