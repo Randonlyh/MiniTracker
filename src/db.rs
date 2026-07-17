@@ -102,6 +102,6 @@ pub fn db_setup(connection: &Connection) -> Result<(), Error> {
         (52, 'Game Gear'),
         (53, 'Arcade');", [])?;
 
-	connection.execute("INSERT OR IGNORE INTO Users(Username) VALUES('User')", [])?;
+	connection.execute("INSERT OR IGNORE INTO Users(UserID, Username) VALUES(1, 'User')", [])?;
 	Ok(())
 }
