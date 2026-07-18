@@ -1,7 +1,9 @@
 mod db;
 mod sessions;
+mod detection;
 use db::*;
 use sessions::*;
+use detection::*;
 
 use std::process::{Command, Stdio};
 use std::env;
@@ -11,9 +13,6 @@ use std::io;
 use std::fs::File;
 #[cfg(debug_assertions)]
 use std::io::Write;
-
-use rusqlite::{Connection, Error};
-use rusqlite::params;
 
 fn main() -> io::Result<()> {
 	let mut process;
@@ -126,42 +125,4 @@ fn print_application_args_to_file(args: Vec<String>, envs: Vec<(String, String)>
 	for i in args.into_iter() {
 		writeln!(&mut file, "{}", i).unwrap();
 	}
-}
-
-fn manual_mode(app_id: i64, launch_id: i64, connection: &Connection) -> Result<(), Error> {
-	// Check if IDs exists and create them if not
-	connection.execute("INSERT OR IGNORE INTO Apps(AppID) VALUES(?1)", [app_id])?;
-	connection.execute("INSERT OR IGNORE INTO UserData(UserID, AppID, Playtime) VALUES(1, ?1, 0)", [app_id])?;
-	connection.execute("INSERT OR IGNORE INTO LaunchOptions(LaunchID, AppID) VALUES(?1, ?2)", [launch_id, app_id])?;
-	Ok(())
-}
-
-fn automatic_app(app_split: &Vec<&str>, connection: &Connection) -> i64 {
-	let app_name = app_split.last().unwrap();
-
-	let app_id: i64 = match connection.query_row("SELECT AppID FROM Apps WHERE Name == ?1",
-	[app_name], |row| row.get::<_, i64>(0)) {
-		Ok(id) => id,
-		Err(_) => {
-			match connection.query_row("INSERT INTO Apps(Name, PlatformID) VALUES(?1, 2) RETURNING AppID",
-			[app_name], |row| row.get::<_, i64>(0)) {
-				Ok(id) => id,
-				Err(err) => panic!("MiniTracker SQL Command Error: {}", err),
-			}
-		},
-	};
-
-	// Create UserData entry for app if it does not exist
-	match connection.query_row("SELECT * FROM UserData WHERE AppID == ?1 AND UserID == 1",
-	[app_id], |row| row.get::<_, i64>(0)) {
-		Ok(_) => (),
-		Err(_) => {
-			connection.execute("INSERT INTO UserData(UserID, AppID, Playtime) VALUES(1, ?1, 0)", [app_id]).unwrap();
-		},
-	};
-
-	connection.execute("INSERT OR IGNORE INTO LaunchOptions(LaunchID, AppID, Name)
-		VALUES(0, ?1, ?2)", params![app_id, app_name]).unwrap();
-
-	app_id
 }

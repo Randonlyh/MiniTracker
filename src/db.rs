@@ -91,16 +91,16 @@ pub fn db_setup(connection: &Connection) -> Result<(), Error> {
 		(25, 'Switch'), (26, 'Switch 2'),
 		(27, 'Gameboy'), (28, 'Gameboy Colour'), (29, 'Gameboy Advance'),
 		(30, 'DS'), (31, 'DSi'),
-		(31, '3DS'), (32, 'New 3DS'),
-		(33, 'PS1'), (34, 'PS2'), (35, 'PS3'), (36, 'PS4'), (37, 'PS5'),
-		(38, 'PSVR'), (39, 'PSVR2'),
-		(40, 'PSP'), (41, 'PSVita'),
-		(42, 'Xbox'), (43, 'Xbox 360'), (44, 'Xbox One'), (45, 'Xbox Series'),
-		(46, 'MasterSystem'), (47, 'MegaDrive'), (48, 'Mega CD'), (49, 'MegaDrive 32X'),
-		(50, 'Sega Saturn'),
-		(51, 'Dreamcast'),
-		(52, 'Game Gear'),
-		(53, 'Arcade');", [])?;
+		(32, '3DS'), (33, 'New 3DS'),
+		(34, 'PS1'), (35, 'PS2'), (36, 'PS3'), (37, 'PS4'), (38, 'PS5'),
+		(39, 'PSVR'), (40, 'PSVR2'),
+		(41, 'PSP'), (42, 'PSVita'),
+		(43, 'Xbox'), (44, 'Xbox 360'), (45, 'Xbox One'), (46, 'Xbox Series'),
+		(47, 'MasterSystem'), (48, 'MegaDrive'), (49, 'Mega CD'), (50, 'MegaDrive 32X'),
+		(51, 'Sega Saturn'),
+		(52, 'Dreamcast'),
+		(53, 'Game Gear'),
+		(54, 'Arcade');", [])?;
 
 	connection.execute("INSERT OR IGNORE INTO Users(UserID, Username) VALUES(1, 'User')", [])?;
 	Ok(())
