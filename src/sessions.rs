@@ -4,7 +4,7 @@ pub fn create_play_session(connection: &Connection, app_id: i64, launch_id: i64)
 	// Add a new play session
 	if let Err(e) = connection.execute("INSERT INTO PlaySessions(UserID, AppID, StartedAt, LaunchID)
 	VALUES(1, ?1, datetime('now', 'localtime'), ?2)", [app_id, launch_id]) {
-		eprintln!("Staty SQL Error: {}", e);
+		eprintln!("MiniTracker SQL Error: {}", e);
 	}
 
 	// Grab play session ID for later
