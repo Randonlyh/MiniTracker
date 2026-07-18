@@ -2,7 +2,7 @@
 
 ## The Problem
 
-There is no good way to universally track playtime for your apps and games on your PC. Sure game launchers like Steam can do it, but Steam for example only tracks Steam games (Non-Steam games are always 0) and it will only track your playtime when online. Launchers like Steam are also quite heavy, and you should not need a massive RAM and launch time penalty when you just want to see how long you used something for!
+There is no good way to universally track playtime for your apps and games on your PC. Sure game launchers like Steam can do it, but Steam does not have a very friendly process of adding Non-Steam games to it. Launchers like Steam are also quite heavy, and you should not need a massive RAM and launch time penalty when you just want to see how long you used something for!
 
 ## The Solution
 
