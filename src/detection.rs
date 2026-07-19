@@ -130,6 +130,7 @@ fn find_platform<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Game
 	if let Some(info) = check_steam(app_split, &args) { return info; }
 	if let Some(info) = check_waydroid(app_split, &args) { return info; }
 	if let Some(info) = check_pcsx2(app_split, &args) { return info; }
+	if let Some(info) = check_dolphin(app_split, &args) { return info; }
 	GameInfo { name: *app_split.last().unwrap(), platform_id: PlatformIDs::Linux, external_id: 0 }
 }
 
@@ -178,6 +179,39 @@ fn check_pcsx2<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option
 		trim_app_name(&mut name);
 
 		let info = GameInfo { name: name, platform_id: PlatformIDs::PS2, external_id: 0 };
+
+		return Some(info);
+	}
+
+	None
+}
+
+fn check_dolphin<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option<GameInfo<'a>> {
+	let mut app_name = *app_split.last().unwrap();
+	trim_app_name(&mut app_name);
+
+	if app_name == "dolphin-emu" {
+		let mut arg_num = 0;
+		for i in args.into_iter() {
+			if i == "-e" {
+				arg_num += 1;
+				break;
+			} else if i.contains("--exec=") {
+				break;
+			}
+
+			arg_num += 1;
+		}
+
+		if arg_num == args.len() {
+			return None;
+		}
+		
+		let mut name: &str = args[arg_num].split('/').collect::<Vec<&str>>().last().unwrap();
+		name = name.trim_start_matches("exec=");
+		trim_app_name(&mut name);
+
+		let info = GameInfo { name: name, platform_id: PlatformIDs::Wii, external_id: 0 };
 
 		return Some(info);
 	}
