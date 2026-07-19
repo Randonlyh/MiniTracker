@@ -70,17 +70,32 @@ pub fn manual_mode(app_id: i64, launch_id: i64, connection: &Connection) -> Resu
 
 pub fn automatic_app(app_split: &Vec<&str>, args: Vec<String>, connection: &Connection) -> i64 {
 	let app_info = find_platform(app_split, &args);
-	let app_id: i64 = match connection.query_row("SELECT AppID FROM Apps WHERE Name == ?1 AND PlatformID == ?2",
-	params!(app_info.name, app_info.platform_id as i64), |row| row.get::<_, i64>(0)) {
-		Ok(id) => id,
-		Err(_) => {
-			match connection.query_row("INSERT INTO Apps(Name, PlatformID, ExternalID) VALUES(?1, ?2, ?3) RETURNING AppID",
-			params!(app_info.name, app_info.platform_id as i64, app_info.external_id), |row| row.get::<_, i64>(0)) {
-				Ok(id) => id,
-				Err(err) => panic!("MiniTracker SQL Command Error: {}", err),
-			}
-		},
-	};
+	let app_id;
+	if app_info.external_id != 0 {
+		app_id = match connection.query_row("SELECT AppID FROM Apps WHERE ExternalID == ?1 AND PlatformID == ?2",
+		params!(app_info.external_id, app_info.platform_id as i64), |row| row.get::<_, i64>(0)) {
+			Ok(id) => id,
+			Err(_) => {
+				match connection.query_row("INSERT INTO Apps(Name, PlatformID, ExternalID) VALUES(?1, ?2, ?3) RETURNING AppID",
+				params!(app_info.name, app_info.platform_id as i64, app_info.external_id), |row| row.get::<_, i64>(0)) {
+					Ok(id) => id,
+					Err(err) => panic!("MiniTracker SQL Command Error: {}", err),
+				}
+			},
+		};
+	} else {
+		app_id = match connection.query_row("SELECT AppID FROM Apps WHERE Name == ?1 AND PlatformID == ?2",
+		params!(app_info.name, app_info.platform_id as i64), |row| row.get::<_, i64>(0)) {
+			Ok(id) => id,
+			Err(_) => {
+				match connection.query_row("INSERT INTO Apps(Name, PlatformID, ExternalID) VALUES(?1, ?2, ?3) RETURNING AppID",
+				params!(app_info.name, app_info.platform_id as i64, app_info.external_id), |row| row.get::<_, i64>(0)) {
+					Ok(id) => id,
+					Err(err) => panic!("MiniTracker SQL Command Error: {}", err),
+				}
+			},
+		};
+	}
 
 	// Create UserData entry for app if it does not exist
 	match connection.query_row("SELECT * FROM UserData WHERE AppID == ?1 AND UserID == 1",
