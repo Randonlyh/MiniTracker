@@ -128,6 +128,7 @@ struct GameInfo<'a> {
 
 fn find_platform<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> GameInfo<'a> {
 	if let Some(info) = check_steam(app_split, &args) { return info; }
+	if let Some(info) = check_waydroid(app_split, &args) { return info; }
 	GameInfo { name: *app_split.last().unwrap(), platform_id: PlatformIDs::Linux, external_id: 0 }
 }
 
@@ -144,6 +145,21 @@ fn check_steam<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option
 			Ok(id) => id,
 			Err(_) => 0,
 		};
+
+		return Some(info);
+	}
+
+	None
+}
+
+fn check_waydroid<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option<GameInfo<'a>> {
+	let app_name = *app_split.last().unwrap();
+
+	if app_name == "waydroid" {
+		let mut name: &str = args.last().unwrap();
+		trim_app_name(&mut name);
+
+		let info = GameInfo { name: name, platform_id: PlatformIDs::Android, external_id: 0 };
 
 		return Some(info);
 	}
