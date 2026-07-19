@@ -87,7 +87,7 @@ fn main() -> io::Result<()> {
 
 	process = Command::new(&app)
 		.envs(envs.into_iter())
-		.args(current_args.into_iter())
+		.args(current_args.clone().into_iter())
 		.stdin(Stdio::inherit())
 		.stdout(Stdio::inherit())
 		.spawn()
@@ -97,7 +97,7 @@ fn main() -> io::Result<()> {
 		// Parsing the path of the app
 		let app_split: Vec<&str> = app.split('/').collect();
 
-		app_id = automatic_app(&app_split, &connection);
+		app_id = automatic_app(&app_split, current_args, &connection);
 	} else {
 		manual_mode(app_id, launch_id, &connection).unwrap();
 	}
@@ -114,7 +114,7 @@ fn main() -> io::Result<()> {
 
 #[cfg(debug_assertions)]
 fn print_application_args_to_file(args: Vec<String>, envs: Vec<(String, String)>) {
-	let mut file = File::create("./arguments.txt").expect("File should be created.");
+	let mut file = File::create("/home/me/Development/staty/arguments.txt").expect("File should be created.");
 
 	for i in envs.into_iter() {
 		writeln!(&mut file, "{}={} ", i.0, i.1).unwrap();
