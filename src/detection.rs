@@ -171,7 +171,7 @@ fn check_waydroid<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Opt
 fn check_pcsx2<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option<GameInfo<'a>> {
 	let mut app_name = *app_split.last().unwrap();
 	trim_app_name(&mut app_name);
-	
+
 	if app_name == "pcsx2" {
 		let mut name: &str = args.last().unwrap().split('/').collect::<Vec<&str>>().last().unwrap();
 		name = name.trim_end_matches("'");
@@ -184,4 +184,3 @@ fn check_pcsx2<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option
 
 	None
 }
-
