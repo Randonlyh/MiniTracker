@@ -112,12 +112,12 @@ pub fn automatic_app(app_split: &Vec<&str>, args: Vec<String>, connection: &Conn
 	app_id
 }
 
-#[allow(unused_assignments, dead_code)]
 fn trim_app_name(name: &mut &str) {
 	*name = name.trim_end_matches(".sh");
 	*name = name.trim_end_matches(".exe");
 	*name = name.trim_end_matches(".elf");
 	*name = name.trim_end_matches(".appimage");
+	*name = name.trim_end_matches(".iso");
 }
 
 struct GameInfo<'a> {
@@ -129,6 +129,7 @@ struct GameInfo<'a> {
 fn find_platform<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> GameInfo<'a> {
 	if let Some(info) = check_steam(app_split, &args) { return info; }
 	if let Some(info) = check_waydroid(app_split, &args) { return info; }
+	if let Some(info) = check_pcsx2(app_split, &args) { return info; }
 	GameInfo { name: *app_split.last().unwrap(), platform_id: PlatformIDs::Linux, external_id: 0 }
 }
 
@@ -166,3 +167,21 @@ fn check_waydroid<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Opt
 
 	None
 }
+
+fn check_pcsx2<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Option<GameInfo<'a>> {
+	let mut app_name = *app_split.last().unwrap();
+	trim_app_name(&mut app_name);
+	
+	if app_name == "pcsx2" {
+		let mut name: &str = args.last().unwrap().split('/').collect::<Vec<&str>>().last().unwrap();
+		name = name.trim_end_matches("'");
+		trim_app_name(&mut name);
+
+		let info = GameInfo { name: name, platform_id: PlatformIDs::PS2, external_id: 0 };
+
+		return Some(info);
+	}
+
+	None
+}
+
