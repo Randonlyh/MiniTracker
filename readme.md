@@ -9,20 +9,31 @@ There is no good way to universally track playtime for your apps and games on yo
 MiniTracker solves this by being a small lightweight wrapper for Linux. Upon launching an app/game with MiniTracker prepended to it like `mtracker path/to/your/app`, your start time of the session of the process is recorded. Once the application is closed, the end time, duration of the session and total playtime (Every session added up) is also calculated. Everything is stored in a small SQLite database in `$HOME/.local/share/randonlyh/stats/apps.sqlite`, so you can easily look through your data for everything. (A dedicated app for visualising all your stats should come at a later date!)
 The app is tiny, depending on only the Rust Standard Library, and while running it uses ~4Mb of RAM and has no noticeable impact on app launch/closing speeds.
 
-### Advanced Usage
+### Usage
 
-MiniTracker has 2 modes. By default it uses Automatic detection, which uses the environment variables, application, and arguments to try to figure out the name and other details of the app/game you're using. This allows it to update the database under the correct name or create a new entry. Currently MiniTracker detects every app as a Linux application, but specific support for the following platforms are planned:
-* Steam
-* Dolphin (Gamecube/Wii)
-* Cemu (Wii U)
-* Heroic
-  * GOG
-  * Epic Games
-* Waydroid
+```bash
+mtracker path/to/your/game
+```
+
+MiniTracker has 2 modes. By default it uses Automatic detection, which uses the environment variables, application, and arguments to try to figure out the name and other details of the app/game you're using. This allows it to update the database under the correct name or create a new entry. Currently MiniTracker can autodetect the following platforms:
+
+| Platform                          | Implemented? | Notes                                                                                           |
+| --------------------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| Linux                             | Yes          | This is the default platform in case something can't be figured out or isn't implemented yet    |
+| Steam                             | Yes          | Inside the properties of the steam game of choice, type in the command box `mtracker %command%` |
+| Dolphin (Gamecube/Wii)            | No           | Will only work if game is launched via terminal/app shortcut                                    |
+| PCSX2 (PS2)                       | No           | Will only work if game is launched via terminal/app shortcut                                    |
+| Waydroid (Android)                | No           | Will only work if game is launched via terminal/app shortcut                                    |
+| GOG (via Heroic)                  | No           |                                                                                                 |
+| Epic Games (via Heroic/Legendary) | No           |                                                                                                 |
+
 
 With more to come as I need them or per request.
 
 Do note that auto detection can't figure out too much information. There is only so much you can surmise from these values, and trying to check a database of some kind would bloat the app. To solve this there is a secondary mode:
+
+> [!NOTE]
+> Automatic detection will always set your `LaunchID` to 0. If you have an app that you launch in different ways (e.g. a Modded vs Vanilla game), but you would still like them to be tracked underneath the same overall App, read below for more information.
 
 #### Manual Mode
 
@@ -38,9 +49,6 @@ You can manually assign an AppID and LaunchID before your application and MiniTr
 
 > [!WARNING]
 > You can very easily overwrite an existing entry using this system which will skew your data. Be careful!
-
-> [!NOTE]
-> Automatic detection will always set your LaunchID to 0. If you have an app that you launch in different ways (e.g. a Modded vs Vanilla game), but you would still like them to be tracked underneath the same overall App, that's where LaunchID comes in.
 
 ## Build Instructions
 
