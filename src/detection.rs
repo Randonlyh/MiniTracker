@@ -229,7 +229,7 @@ fn check_dolphin<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Opti
 		}
 
 		let mut name: &str = args[arg_num].split('/').collect::<Vec<&str>>().last().unwrap();
-		name = name.trim_start_matches("exec=");
+		name = name.trim_start_matches("--exec=");
 		trim_app_name(&mut name);
 
 		let info = GameInfo { name: name, platform_id: PlatformIDs::Wii, external_id: 0 };
