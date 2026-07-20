@@ -68,9 +68,15 @@ pub fn manual_mode(app_id: i64, launch_id: i64, connection: &Connection) -> Resu
 	Ok(())
 }
 
-pub fn automatic_app(app_split: &Vec<&str>, args: Vec<String>, connection: &Connection) -> i64 {
-	let app_info = find_platform(app_split, &args);
+pub fn automatic_app<'a>(app_split: &'a mut Vec<&'a str>, args: &'a Vec<String>, envs: &'a Vec<(String, String)>, connection: &'a Connection) -> i64 {
+	let new_app_split = remove_wrappers(app_split, &args);
+	if let Some(path) = new_app_split {
+		*app_split = path;
+	}
+
+	let app_info = find_platform(app_split, &args, &envs);
 	let app_id;
+
 	if app_info.external_id != 0 {
 		app_id = match connection.query_row("SELECT AppID FROM Apps WHERE ExternalID == ?1 AND PlatformID == ?2",
 		params!(app_info.external_id, app_info.platform_id as i64), |row| row.get::<_, i64>(0)) {
@@ -118,6 +124,15 @@ fn trim_app_name(name: &mut &str) {
 	*name = name.trim_end_matches(".elf");
 	*name = name.trim_end_matches(".appimage");
 	*name = name.trim_end_matches(".iso");
+	*name = name.trim_end_matches(".py");
+}
+
+fn remove_wrappers<'a>(app_split: &mut Vec<&'a str>, args: &'a Vec<String>) -> Option<Vec<&'a str>> {
+	if app_split.last().unwrap() == &"gamemoderun" {
+		Some(args[0].split('/').collect())
+	} else {
+		None
+	}
 }
 
 struct GameInfo<'a> {
@@ -126,11 +141,13 @@ struct GameInfo<'a> {
 	external_id: i64,
 }
 
-fn find_platform<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> GameInfo<'a> {
+fn find_platform<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>, envs: &'a Vec<(String, String)>) -> GameInfo<'a> {
 	if let Some(info) = check_steam(app_split, &args) { return info; }
 	if let Some(info) = check_waydroid(app_split, &args) { return info; }
 	if let Some(info) = check_pcsx2(app_split, &args) { return info; }
 	if let Some(info) = check_dolphin(app_split, &args) { return info; }
+	if let Some(info) = check_heroic_epic(app_split, &args , &envs) { return info; }
+
 	GameInfo { name: *app_split.last().unwrap(), platform_id: PlatformIDs::Linux, external_id: 0 }
 }
 
@@ -158,6 +175,10 @@ fn check_waydroid<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Opt
 	let app_name = *app_split.last().unwrap();
 
 	if app_name == "waydroid" {
+		if args.len() < 3 {
+			return None;
+		}
+
 		let mut name: &str = args.last().unwrap();
 		trim_app_name(&mut name);
 
@@ -206,7 +227,7 @@ fn check_dolphin<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Opti
 		if arg_num == args.len() {
 			return None;
 		}
-		
+
 		let mut name: &str = args[arg_num].split('/').collect::<Vec<&str>>().last().unwrap();
 		name = name.trim_start_matches("exec=");
 		trim_app_name(&mut name);
@@ -214,6 +235,24 @@ fn check_dolphin<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>) -> Opti
 		let info = GameInfo { name: name, platform_id: PlatformIDs::Wii, external_id: 0 };
 
 		return Some(info);
+	}
+
+	None
+}
+
+fn check_heroic_epic<'a>(app_split: &'a Vec<&'a str>, args: &'a Vec<String>, envs: &'a Vec<(String, String)>) -> Option<GameInfo<'a>> {
+	if envs.last().unwrap().0 == "LEGENDARY_CONFIG_PATH".to_string() {
+		let mut app_name = *app_split.last().unwrap();
+		trim_app_name(&mut app_name);
+
+		if app_name == "umu_run" {
+			let mut name: &str = args[1].split('/').collect::<Vec<&str>>().last().unwrap();
+			trim_app_name(&mut name);
+
+			let info = GameInfo { name: name, platform_id: PlatformIDs::EpicGames, external_id: 0 };
+
+			return Some(info);
+		}
 	}
 
 	None

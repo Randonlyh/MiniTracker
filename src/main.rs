@@ -79,14 +79,14 @@ fn main() -> io::Result<()> {
 
 	let current_args: Vec<String> = args.collect();
 
-	// Ripping all environment/arguments to a text file in Debug mode
-	#[cfg(debug_assertions)]
-	print_application_args_to_file(current_args.clone(), envs.clone());
-
 	let app = current_var.unwrap();
 
+	// Ripping all environment/arguments to a text file in Debug mode
+	#[cfg(debug_assertions)]
+	print_application_args_to_file(current_args.clone(), envs.clone(), &app);
+
 	process = Command::new(&app)
-		.envs(envs.into_iter())
+		.envs(envs.clone().into_iter())
 		.args(current_args.clone().into_iter())
 		.stdin(Stdio::inherit())
 		.stdout(Stdio::inherit())
@@ -95,9 +95,9 @@ fn main() -> io::Result<()> {
 
 	if recording_mode {
 		// Parsing the path of the app
-		let app_split: Vec<&str> = app.split('/').collect();
+		let mut app_split: Vec<&str> = app.split('/').collect();
 
-		app_id = automatic_app(&app_split, current_args, &connection);
+		app_id = automatic_app(&mut app_split, &current_args, &envs, &connection);
 	} else {
 		manual_mode(app_id, launch_id, &connection).unwrap();
 	}
@@ -113,13 +113,20 @@ fn main() -> io::Result<()> {
 }
 
 #[cfg(debug_assertions)]
-fn print_application_args_to_file(args: Vec<String>, envs: Vec<(String, String)>) {
-	let mut file = File::create("/home/me/Development/staty/arguments.txt").expect("File should be created.");
+fn print_application_args_to_file(args: Vec<String>, envs: Vec<(String, String)>, name: &String) {
+	let log_file: String = match env::home_dir() {
+		Some(path) => path.to_string_lossy().into_owned() + "/.local/share/randonlyh/stats/argument-log.txt",
+		None => "./".to_string(),
+	};
+
+	let mut file = File::create(log_file).expect("File should be created.");
 
 	for i in envs.into_iter() {
 		writeln!(&mut file, "{}={} ", i.0, i.1).unwrap();
 	}
 
+	writeln!(&mut file, "").unwrap();
+	writeln!(&mut file, "{}", name).unwrap();
 	writeln!(&mut file, "").unwrap();
 
 	for i in args.into_iter() {
