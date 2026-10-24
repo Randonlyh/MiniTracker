@@ -4,30 +4,36 @@ use std::fs::create_dir_all;
 use rusqlite::{Connection, Error};
 
 pub fn init_connection() -> Connection {
-	let db_folder: String = match env::home_dir() {
-		Some(path) => path.to_string_lossy().into_owned() + "/.local/share/randonlyh/stats",
-		None => "./".to_string(),
-	};
+    let db_folder: String = match env::home_dir() {
+        Some(path) => {
+            path.to_string_lossy().into_owned() + "/.local/share/randonlyh/launcher/stats"
+        }
+        None => "./".to_string(),
+    };
 
-	let db_path = db_folder.clone() + "/apps.sqlite";
+    let db_path = db_folder.clone() + "/apps.sqlite";
 
-	match Connection::open(&db_path) {
-		Ok(conn) => conn,
-		Err(err) => {
-			eprintln!("MiniTracker SQL Command Error: {}", err);
-			println!("MiniTracker: Creating DB...");
-			create_dir_all(&db_folder).unwrap();
-			Connection::open(&db_path).unwrap()
-		},
-	}
+    match Connection::open(&db_path) {
+        Ok(conn) => conn,
+        Err(err) => {
+            eprintln!("MiniTracker SQL Command Error: {}", err);
+            println!("MiniTracker: Creating DB...");
+            create_dir_all(&db_folder).unwrap();
+            Connection::open(&db_path).unwrap()
+        }
+    }
 }
 
 pub fn db_setup(connection: &Connection) -> Result<(), Error> {
-	connection.execute("CREATE TABLE IF NOT EXISTS Platforms(
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS Platforms(
 		PlatformID INTEGER PRIMARY KEY,
-		Name TEXT);", [])?;
+		Name TEXT);",
+        [],
+    )?;
 
-	connection.execute("CREATE TABLE IF NOT EXISTS Apps(
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS Apps(
 		AppID INTEGER PRIMARY KEY,
 		Name TEXT,
 		PlatformID INTEGER,
@@ -36,14 +42,20 @@ pub fn db_setup(connection: &Connection) -> Result<(), Error> {
 		Publisher TEXT,
 		ReleaseDate INTEGER,
 		FOREIGN KEY(PlatformID) REFERENCES Platforms(PlatformID)
-		);", [])?;
+		);",
+        [],
+    )?;
 
-	connection.execute("CREATE TABLE IF NOT EXISTS Users(
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS Users(
 		UserID INTEGER PRIMARY KEY,
 		Username TEXT
-		);", [])?;
+		);",
+        [],
+    )?;
 
-	connection.execute("CREATE TABLE IF NOT EXISTS UserData(
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS UserData(
 		UserID INTEGER,
 		AppID INTEGER,
 		Playtime INTEGER,
@@ -51,9 +63,12 @@ pub fn db_setup(connection: &Connection) -> Result<(), Error> {
 		PRIMARY KEY(UserID, AppID),
 		FOREIGN KEY(UserID) REFERENCES Users(UserID),
 		FOREIGN KEY(AppID) REFERENCES Apps(AppID)
-		);", [])?;
+		);",
+        [],
+    )?;
 
-	connection.execute("CREATE TABLE IF NOT EXISTS LaunchOptions(
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS LaunchOptions(
 		LaunchID INTEGER,
 		AppID INTEGER,
 		Name TEXT,
@@ -63,9 +78,12 @@ pub fn db_setup(connection: &Connection) -> Result<(), Error> {
 		DisplayOrder INTEGER,
 		PRIMARY KEY(LaunchID, AppID),
 		FOREIGN KEY(AppID) REFERENCES Apps(AppID)
-		);", [])?;
+		);",
+        [],
+    )?;
 
-	connection.execute("CREATE TABLE IF NOT EXISTS PlaySessions(
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS PlaySessions(
 		SessionID INTEGER PRIMARY KEY,
 		UserID INTEGER,
 		AppID INTEGER,
@@ -76,32 +94,37 @@ pub fn db_setup(connection: &Connection) -> Result<(), Error> {
 		FOREIGN KEY(UserID) REFERENCES Users(UserID),
 		FOREIGN KEY(AppID) REFERENCES Apps(AppID),
 		FOREIGN KEY(LaunchID, AppID) REFERENCES LaunchOptions(LaunchID, AppID)
-		);", [])?;
+		);",
+        [],
+    )?;
 
-	connection.execute("INSERT OR IGNORE INTO Platforms(PlatformID, Name)
+    connection.execute("INSERT OR IGNORE INTO Platforms(PlatformID, Name)
 		VALUES (0, 'Unspecified'),
-		(1, 'Windows'), (2, 'Linux'), (3, 'MacOS'), (4, 'MS-DOS'),
+		(1, 'Windows'), (2, 'Linux'), (3, 'Mac OS'), (4, 'MS-DOS'),
 		(5, 'Steam'), (6, 'Epic Games'), (7, 'GOG'), (8, 'Itch.io'), (9, 'Game Jolt'), (10, 'Zoom Platform'),
 		(11, 'Mobile'), (12, 'Android'), (13, 'iOS'),
 		(14, 'NES'), (15, 'Famicom'), (16, 'Famicom Disk System'),
 		(17, 'SNES'), (18, 'Super Famicom'),
-		(19, 'VirtualBoy'),
+		(19, 'Virtual Boy'),
 		(20, 'N64'), (21, 'N64 DD'),
-		(22, 'Gamecube'), (23, 'Wii'), (24, 'WiiU'),
-		(25, 'Switch'), (26, 'Switch 2'),
+		(22, 'GameCube'), (23, 'Wii'), (24, 'Wii U'),
+		(25, 'Nintendo Switch'), (26, 'Nintendo Switch 2'),
 		(27, 'Gameboy'), (28, 'Gameboy Colour'), (29, 'Gameboy Advance'),
-		(30, 'DS'), (31, 'DSi'),
-		(32, '3DS'), (33, 'New 3DS'),
+		(30, 'Nintendo DS'), (31, 'Nintendo DSi'),
+		(32, 'Nintendo 3DS'), (33, 'New Nintendo 3DS'),
 		(34, 'PS1'), (35, 'PS2'), (36, 'PS3'), (37, 'PS4'), (38, 'PS5'),
 		(39, 'PSVR'), (40, 'PSVR2'),
 		(41, 'PSP'), (42, 'PSVita'),
 		(43, 'Xbox'), (44, 'Xbox 360'), (45, 'Xbox One'), (46, 'Xbox Series'),
-		(47, 'MasterSystem'), (48, 'MegaDrive'), (49, 'Mega CD'), (50, 'MegaDrive 32X'),
+		(47, 'Master System'), (48, 'Mega Drive'), (49, 'Mega CD'), (50, 'Mega Drive 32X'),
 		(51, 'Sega Saturn'),
 		(52, 'Dreamcast'),
 		(53, 'Game Gear'),
 		(54, 'Arcade');", [])?;
 
-	connection.execute("INSERT OR IGNORE INTO Users(UserID, Username) VALUES(1, 'User')", [])?;
-	Ok(())
+    connection.execute(
+        "INSERT OR IGNORE INTO Users(UserID, Username) VALUES(1, 'User')",
+        [],
+    )?;
+    Ok(())
 }
