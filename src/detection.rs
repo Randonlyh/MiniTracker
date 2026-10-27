@@ -197,7 +197,7 @@ fn find_platform<'a>(
 
     GameInfo {
         name: *app_split.last().unwrap(),
-        platform_id: PlatformIDs::Linux,
+        platform_id: PlatformIDs::Unspecified,
         external_id: 0,
     }
 }

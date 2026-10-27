@@ -6,7 +6,7 @@ There is no good way to universally track playtime for your apps and games on yo
 
 ## The Solution
 
-MiniTracker solves this by being a small lightweight wrapper for Linux. Upon launching an app/game with MiniTracker prepended to it like `mtracker path/to/your/app`, your start time of the session of the process is recorded. Once the application is closed, the end time, duration of the session and total playtime (Every session added up) is also calculated. Everything is stored in a small SQLite database in `$HOME/.local/share/randonlyh/stats/apps.sqlite`, so you can easily look through your data for everything. (A dedicated app for visualising all your stats should come at a later date!)
+MiniTracker solves this by being a small lightweight wrapper for Linux. Upon launching an app/game with MiniTracker prepended to it like `mtracker path/to/your/app`, your start time of the session of the process is recorded. Once the application is closed, the end time, duration of the session and total playtime (Every session added up) is also calculated. Everything is stored in a small SQLite database in `$HOME/.local/share/randonlyh/launcher/stats/db.sqlite`, so you can easily look through your data for everything. (A dedicated app for visualising all your stats should come at a later date!)
 The app is tiny, depending on only the Rust Standard Library, and while running it uses ~4Mb of RAM and has no noticeable impact on app launch/closing speeds.
 
 ### Usage
@@ -19,7 +19,7 @@ MiniTracker has 2 modes. By default it uses Automatic detection, which uses the 
 
 | Platform                          | Notes                                                                                                                                                                                                                                          |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Linux                             | This is the default platform in case something can't be figured out or isn't implemented yet                                                                                                                                                   |
+| Unspecified                       | This is the default platform in case something can't be figured out or isn't implemented yet                                                                                                                                                   |
 | Steam                             | Inside the properties of the steam game of choice, type in the command box `mtracker %command%`                                                                                                                                                |
 | Epic Games (via Heroic/Legendary) | Add `mtracker` as a wrapper in an apps settings inside Heroic.                                                                                                                                                                                 |
 | Waydroid (Android)                | 1. Launch games via `mtracker waydroid app launch {AndroidAppName}` in a terminal/app shortcut.<br>2. Make sure to call `waydroid session stop` after you're done or MiniTracker won't know when to end the session!                           |

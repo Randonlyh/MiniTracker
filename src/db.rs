@@ -11,7 +11,7 @@ pub fn init_connection() -> Connection {
         None => "./".to_string(),
     };
 
-    let db_path = db_folder.clone() + "/apps.sqlite";
+    let db_path = db_folder.clone() + "/db.sqlite";
 
     match Connection::open(&db_path) {
         Ok(conn) => conn,
