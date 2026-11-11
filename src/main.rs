@@ -107,13 +107,10 @@ fn main() -> io::Result<()> {
     }
 
     let session_id = create_play_session(&connection, app_id, launch_id);
-    let start_time: i64 = connection
-        .query_one("SELECT unixepoch()", [], |row| row.get::<_, i64>(0))
-        .unwrap();
 
     process.wait().unwrap();
 
-    update_playtime(&connection, app_id, session_id, start_time);
+    update_playtime(&connection, app_id, session_id);
 
     Ok(())
 }

@@ -3,8 +3,8 @@ use rusqlite::Connection;
 pub fn create_play_session(connection: &Connection, app_id: i64, launch_id: i64) -> i64 {
     // Add a new play session
     if let Err(e) = connection.execute(
-        "INSERT INTO PlaySessions(UserID, AppID, StartedAt, LaunchID)
-	VALUES(1, ?1, datetime('now', 'localtime'), ?2)",
+        "INSERT INTO PlaySessions(UserID, AppID, LaunchID)
+	VALUES(1, ?1, ?2)",
         [app_id, launch_id],
     ) {
         eprintln!("MiniTracker SQL Error: {}", e);
@@ -21,15 +21,14 @@ pub fn create_play_session(connection: &Connection, app_id: i64, launch_id: i64)
         .unwrap()
 }
 
-pub fn update_playtime(connection: &Connection, app_id: i64, session_id: i64, start_time: i64) {
+pub fn update_playtime(connection: &Connection, app_id: i64, session_id: i64) {
     // Update play session with end time and duration
     connection
         .execute(
             "UPDATE PlaySessions
-	SET ClosedAt = datetime('now', 'localtime'),
-	Duration = strftime('%s', 'now') - ?1
-	WHERE SessionID = ?2",
-            [start_time, session_id],
+	SET ClosedAt = datetime('now', 'localtime')
+	WHERE SessionID = ?1",
+            [session_id],
         )
         .unwrap();
 
