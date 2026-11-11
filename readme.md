@@ -51,11 +51,24 @@ You can manually assign an AppID and LaunchID before your application and MiniTr
 ## Build Instructions
 
 Simply run:
+
 ```bash
 cargo build --release
 ```
 
-in the same folder you copied the repository to (Assuming you have `rust` installed). Compilation may take a bit longer than expected as it only uses 1 codegen-unit to maximise compiler optimisations (You can disable this if wanted by editing the `Cargo.toml` file).
+in the same folder you copied the repository to (Assuming you have `rust` installed).
+
+If you'd like to go even further with file size/RAM optimisation, run the following (assuming you have the nightly build of the rust toolchain and the `rust-src` component):
+
+```bash
+RUSTFLAGS="-Zlocation-detail=none -Zfmt-debug=none" cargo +nightly build \
+  -Z build-std=std,panic_abort \
+  -Z build-std-features="optimize_for_size" \
+  --release
+```
+
+> [!CAUTION]
+> If the program were to crash (unlikely but possible) there will be less debug info to work with.
 
 ## AI Disclaimer
 
